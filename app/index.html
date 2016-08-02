@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html ng-app="WanshList">
+    <head>
+        <meta charset="utf-8">
+        <title>WanshList -- Organize your wishes!</title>
+
+        <link href='https://fonts.googleapis.com/css?family=Fira+Sans' rel='stylesheet' type='text/css'>
+
+        <!-- Bootstrap CSS CDN -->
+        <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">-->
+
+        <!-- Bootstrap CSS Local -->
+        <link rel="stylesheet" href="../assets/css/bootstrap.min.css" media="screen" title="Bootstrap">
+        <!--<link rel="stylesheet" href="../assets/css/bootstrap-theme.min.css" media="screen" title="Bootstrap Theme">-->
+
+        <style media="screen">
+            body {
+                width: 85%;
+                margin: auto;
+
+                font-family: 'Fira Sans', sans-serif;
+            }
+
+            #container {
+                border-left: 2px solid #444;
+                border-right: 2px solid #444;
+            }
+
+            #top {
+                padding-top: 12px;
+                padding-bottom: 6px;
+                background-color: #DDD;
+                -webkit-box-shadow: 0px 4px 8px 0px rgba(170, 170, 170, 1);
+                -moz-box-shadow: 0px 4px 8px 0px rgba(170, 170, 170, 1);
+                box-shadow: 0px 4px 8px 0px rgba(170, 170, 170, 1);
+                position: relative;
+            }
+
+            #middle {
+                background-color: #EEE;
+            }
+
+            .new-item {
+                background: linear-gradient(to bottom, rgba(0, 100, 200, 0.1), rgba(220, 220, 220, 0));
+                border-radius: 10px;
+                border: 1px solid #DDD;
+                border-bottom: none;
+            }
+
+            .new-item p:first-of-type {
+                font-size: 135%;
+                font-style: italic;
+                padding-top: 10px;
+            }
+
+            .new-item-parent {
+                padding: 8px;
+            }
+
+            tr {
+                cursor: pointer;
+            }
+
+            ul.nav.nav-tabs {
+                margin-bottom: 12px;
+            }
+        </style>
+    </head>
+
+    <body ng-controller="WanshListCtrl">
+        <!-- Modal -->
+        <script type="text/ng-template" id="editGood.html">
+            <div class="modal-header">
+                <h3 class="modal-title">Edition de l'item</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group" ng-hide="list == 'wantlist'">
+                        <label for="editGoodPriority" class="col-sm-2 control-label">Priorité</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control input-sm" id="editGoodPriority" placeholder="Priorité" ng-model="good.priority" min="1" max="5" step="1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGoodBrand" class="col-sm-2 control-label">Marque</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control input-sm" id="editGoodBrand" placeholder="Marque" ng-model="good.brand">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGoodModel" class="col-sm-2 control-label">Modèle</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control input-sm" id="editGoodModel" placeholder="Modèle" ng-model="good.model">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGoodType" class="col-sm-2 control-label">Type</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control input-sm" id="editGoodType" placeholder="Type" ng-model="good.type">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGoodPrice" class="col-sm-2 control-label">Prix</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control input-sm" id="editGoodPrice" placeholder="Prix" ng-model="good.price" min="0" max="10000" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editGoodLink" class="col-sm-2 control-label">Lien</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control input-sm" id="editGoodLink" placeholder="Lien" ng-model="good.link">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Date de création</label>
+                        <div class="col-sm-10">
+                            <!--<input type="text" class="form-control input-sm" id="editGoodCreationDate" placeholder="Date de création" ng-model="good.creationDate" readonly>-->
+                            <p class="form-control-static">{{ good.getCreationDate() }}</p>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="list == 'bought'">
+                        <label class="col-sm-2 control-label">Date d'achat</label>
+                        <div class="col-sm-10">
+                            <p class="form-control-static">{{ good.getBuyDate() }}</p>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-show="list == 'bought'">
+                        <label class="col-sm-2 control-label">Note</label>
+                        <div class="col-sm-10">
+                            <p class="form-control-static"><span uib-rating ng-model="good.rating" max="10" aria-labelledby="rating"></span></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="{{ good.link }}" ng-show="good.link" class="btn btn-success" target="_blank">Ouvrir le lien</a>
+                <button class="btn btn-default" type="button" ng-click="transfert('wishlist')" ng-hide="list == 'wishlist'">Transfert vers wishlist</button>
+                <button class="btn btn-default" type="button" ng-click="transfert('wantlist')" ng-hide="list == 'wantlist'">Transfert vers wantlist</button>
+                <button class="btn btn-default" type="button" ng-click="transfert('bought')" ng-hide="list == 'bought'">Transfert vers achats</button>
+                <button class="btn btn-primary" type="button" ng-click="ok()">Valider</button>
+                <button class="btn btn-warning" type="button" ng-click="cancel()">Annuler</button>
+                <button class="btn btn-danger" type="button" ng-click="delete()">Supprimer</button>
+            </div>
+        </script>
+
+        <script type="text/ng-template" id="find.html">
+            <div class="modal-header">
+                <h3 class="modal-title">Recherche</h3>
+            </div>
+            <div class="modal-body">
+                <uib-tabset>
+                    <uib-tab index="0" heading="Par champ texte" ng-click="reset(0)">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="searchText" class="col-sm-2 control-label">Recherche</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control input-sm" id="searchText" placeholder="Rechercher par texte" ng-model="tabData.search">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="columnText" class="col-sm-2 control-label">Colonne</label>
+                                <div class="col-sm-10">
+                                    <select name="column" id="columnText" class="form-control input-sm" ng-model="tabData.columnText">
+                                        <option value="brand">Marque</option>
+                                        <option value="model">Modèle</option>
+                                        <option value="type">Type</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </uib-tab>
+
+                    <uib-tab index="1" heading="Par chiffre" ng-click="reset(1)">
+                        <form class="form-horizontal">
+                            <div class="form-group">
+                                <label for="searchNumber" class="col-sm-2 control-label">Recherche</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control input-sm" id="searchNumber" placeholder="Rechercher par nombre" ng-model="tabData.search">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="columnNumber" class="col-sm-2 control-label">Colonne</label>
+                                <div class="col-sm-10">
+                                    <select name="column" id="columnNumber" class="form-control input-sm" ng-model="tabData.columnNumber">
+                                        <option value="price">Prix</option>
+                                        <option value="priority">Priorité</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="numberFiltering" class="col-sm-2 control-label">Type</label>
+                                <div class="col-sm-10">
+                                    <select name="column" id="numberFiltering" class="form-control input-sm" ng-model="tabData.type">
+                                        <option value="plus">Plus</option>
+                                        <option value="minus">Moins</option>
+                                        <option value="equals">Egal</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </uib-tab>
+                </uib-tabset>
+
+                <h3>Résultats</h3>
+
+                <table class="table table-hover table-condensed">
+                    <thead>
+                        <th ng-click="organize('priority')">Priorité</th>
+                        <th ng-click="organize('brand')">Marque</th>
+                        <th ng-click="organize('model')">Modèle</th>
+                        <th ng-click="organize('type')">Type</th>
+                        <th ng-click="organize('price')">Prix</th>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="good in goods | filter: filt">
+                            <td>{{ good.getPriority() }}</td>
+                            <td>{{ good.getBrand() }}</td>
+                            <td>{{ good.getModel() }}</td>
+                            <td>{{ good.getType() }}</td>
+                            <td>{{ good.getPrice() | money }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" type="button" ng-click="close()">Fermer</button>
+            </div>
+        </script>
+
+        <script type="text/ng-template" id="settings.html">
+            <div class="modal-header">
+                <h3 class="modal-title">Paramètres</h3>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label for="viewType" class="col-sm-2 control-label">Type de vue</label>
+                        <div class="col-sm-10">
+                            <select name="viewType" id="viewType" class="form-control input-sm" ng-model="settings.view">
+                                <option value="block">Bloc</option>
+                                <option value="line">Ligne</option>
+                                <option value="dual">Dual</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsBudget" class="col-sm-2 control-label">Budget</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control input-sm" id="settingsBudget" placeholder="Budget" ng-model="settings.budget" min="0" max="50000" step="10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsThresholdOne" class="col-sm-2 control-label">Seuil du prix 1</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control input-sm" id="settingsThresholdOne" placeholder="Seuil 1" ng-model="settings.priceColors.one.threshold" min="1" max="10000" step="10">
+                        </div>
+                        <label for="settingsColorOne" class="col-sm-2 control-label">Couleur du prix 1</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control input-sm" id="settingsColorOne" placeholder="Couleur 1" ng-model="settings.priceColors.one.color">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsThresholdTwo" class="col-sm-2 control-label">Seuil du prix 2</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control input-sm" id="settingsThresholdTwo" placeholder="Seuil 2" ng-model="settings.priceColors.two.threshold" min="1" max="10000" step="10">
+                        </div>
+                        <label for="settingsColorTwo" class="col-sm-2 control-label">Couleur du prix 2</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control input-sm" id="settingsColorTwo" placeholder="Couleur 2" ng-model="settings.priceColors.two.color">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsThresholdThree" class="col-sm-2 control-label">Seuil du prix 3</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control input-sm" id="settingsThresholdThree" placeholder="Seuil 3" ng-model="settings.priceColors.three.threshold" min="1" max="10000" step="10">
+                        </div>
+                        <label for="settingsColorThree" class="col-sm-2 control-label">Couleur du prix 3</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control input-sm" id="settingsColorThree" placeholder="Couleur 3" ng-model="settings.priceColors.three.color">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsThresholdFour" class="col-sm-2 control-label">Seuil du prix 4</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control input-sm" id="settingsThresholdFour" placeholder="Seuil 4" ng-model="settings.priceColors.four.threshold" min="1" max="10000" step="10">
+                        </div>
+                        <label for="settingsColorFour" class="col-sm-2 control-label">Couleur du prix 4</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control input-sm" id="settingsColorFour" placeholder="Couleur 4" ng-model="settings.priceColors.four.color">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settingsThresholdFive" class="col-sm-2 control-label">Seuil du prix 5</label>
+                        <div class="col-sm-4">
+                            <input type="number" class="form-control input-sm" id="settingsThresholdFive" placeholder="Seuil 5" ng-model="settings.priceColors.five.threshold" min="1" max="10000" step="10">
+                        </div>
+                        <label for="settingsColorFive" class="col-sm-2 control-label">Couleur du prix 5</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control input-sm" id="settingsColorFive" placeholder="Couleur 5" ng-model="settings.priceColors.five.color">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" ng-click="ok()">Valider</button>
+                <button class="btn btn-warning" type="button" ng-click="cancel()">Annuler</button>
+            </div>
+        </script>
+
+        <div class="row" id="container">
+            <div class="col-sm-12">
+                <div class="row" id="top"> <!-- Intro -->
+                    <div class="col-sm-12">
+                        <h2>
+                            Bienvenue dans WanshList!
+                            <span style="float: right;">
+                                <input type="image" src="../assets/img/1470100495_magnifying_glass.png" alt="Settings" width="28" height="28" ng-click="find()">
+                                <input type="image" src="../assets/img/1470100232_FEZ-04.png" alt="Settings" width="28" height="28" ng-click="setting()">
+                            </span>
+                        </h2>
+                    </div>
+                </div>
+
+                <div class="row" id="middle"> <!-- App -->
+                    <div ng-class="classize()"> <!-- Wishlist -->
+                        <h3><img src="../assets/img/1470098429_number-one.png" alt="One" width="20" height="20">&nbsp;Wishlist</h3>
+                        <table class="table table-hover table-condensed">
+                            <thead>
+                                <th ng-click="organize('wishlist', 'priority')">Priorité</th>
+                                <th ng-click="organize('wishlist', 'brand')">Marque</th>
+                                <th ng-click="organize('wishlist', 'model')">Modèle</th>
+                                <th ng-click="organize('wishlist', 'type')">Type</th>
+                                <th ng-click="organize('wishlist', 'price')">Prix</th>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="good in lists.wishlist.goods" ng-click="editGood('wishlist', $index)">
+                                    <td>{{ good.getPriority() }}</td>
+                                    <td>{{ good.getBrand() }}</td>
+                                    <td>{{ good.getModel() }}</td>
+                                    <td>{{ good.getType() }}</td>
+                                    <td ng-style="stylize(good)">{{ good.getPrice() | money }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row" style="margin-bottom: 18px;">
+                            <div class="col-sm-8 text-center">
+                                <span class="h3">Total</span>
+                            </div>
+                            <div class="col-sm-4 text-center">
+                                <span class="h3">{{ lists.wishlist.getTotal() | money }}</span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <uib-progressbar value="lists.wishlist.getTotal()" ng-show="settings.budget && lists.wishlist.getTotal()" max="settings.budget"></uib-progressbar>
+                            </div>
+                        </div>
+
+                        <div class="row new-item-parent">
+                            <div class="col-sm-12 new-item">
+                                <p>
+                                    <img src="../assets/img/1470100007_add.png" alt="One" width="20" height="20">&nbsp;Nouvel objet
+                                </p>
+                                <form class="form-horizontal">
+                                    <div class="form-group">
+                                        <label for="wishlistPriority" class="col-sm-2 control-label">Priorité</label>
+                                        <div class="col-sm-10">
+                                            <input type="number" class="form-control input-sm" id="wishlistPriority" placeholder="Priorité" ng-model="lists.wishlist.entry.priority" min="1" max="5" step="1">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wishlistBrand" class="col-sm-2 control-label">Marque</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wishlistBrand" placeholder="Marque" ng-model="lists.wishlist.entry.brand">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wishlistModel" class="col-sm-2 control-label">Modèle</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wishlistModel" placeholder="Modèle" ng-model="lists.wishlist.entry.model">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wishlistType" class="col-sm-2 control-label">Type</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wishlistType" placeholder="Type" ng-model="lists.wishlist.entry.type">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wishlistPrice" class="col-sm-2 control-label">Prix</label>
+                                        <div class="col-sm-10">
+                                            <input type="number" class="form-control input-sm" id="wishlistPrice" placeholder="Prix" ng-model="lists.wishlist.entry.price" min="0" max="10000" step="0.01" ng-keyup="$event.keyCode == 13 && record('wishlist')">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wishlistLink" class="col-sm-2 control-label">Lien</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wishlistLink" placeholder="Lien" ng-model="lists.wishlist.entry.link">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-offset-2 col-sm-10">
+                                            <button type="button" class="btn btn-sm btn-success btn-block" ng-click="record('wishlist')">Enregistrer</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-class="classize()"> <!-- Wantlist/Needlist -->
+                        <h3><img src="../assets/img/1470098432_number-two.png" alt="Two" width="20" height="20">&nbsp;Wantlist</h3>
+                        <table class="table table-hover table-condensed" id="wantlistTable">
+                            <thead>
+                                <th ng-click="organize('wantlist', 'brand')">Marque</th>
+                                <th ng-click="organize('wantlist', 'model')">Modèle</th>
+                                <th ng-click="organize('wantlist', 'type')">Type</th>
+                                <th ng-click="organize('wantlist', 'price')">Prix</th>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="good in lists.wantlist.goods" ng-click="editGood('wantlist', $index)">
+                                    <td>{{ good.getBrand() }}</td>
+                                    <td>{{ good.getModel() }}</td>
+                                    <td>{{ good.getType() }}</td>
+                                    <td ng-style="stylize(good)">{{ good.getPrice() | money }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row" style="margin-bottom: 18px;">
+                            <div class="col-sm-8 text-center">
+                                <span class="h3">Total</span>
+                            </div>
+                            <div class="col-sm-4 text-center">
+                                <span class="h3">{{ lists.wantlist.getTotal() | money }}</span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <uib-progressbar value="lists.wantlist.getTotal()" ng-show="settings.budget && lists.wantlist.getTotal()" max="settings.budget" type="warning"></uib-progressbar>
+                            </div>
+                        </div>
+
+                        <div class="row new-item-parent">
+                            <div class="col-sm-12 new-item">
+                                <p>
+                                    <img src="../assets/img/1470100007_add.png" alt="One" width="20" height="20">&nbsp;Nouvel objet
+                                </p>
+                                <form class="form-horizontal">
+                                    <div class="form-group">
+                                        <label for="wantlistBrand" class="col-sm-2 control-label">Marque</label>
+                                        <div class="col-sm-10">
+                                            <input focus-on="enterWantlist" type="text" class="form-control input-sm" id="wantlistBrand" placeholder="Marque" ng-model="lists.wantlist.entry.brand">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wantlistModel" class="col-sm-2 control-label">Modèle</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wantlistModel" placeholder="Modèle" ng-model="lists.wantlist.entry.model">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wantlistType" class="col-sm-2 control-label">Type</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wantlistType" placeholder="Type" ng-model="lists.wantlist.entry.type">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wantlistPrice" class="col-sm-2 control-label">Prix</label>
+                                        <div class="col-sm-10">
+                                            <input type="number" class="form-control input-sm" id="wantlistPrice" placeholder="Prix" ng-model="lists.wantlist.entry.price" min="0" max="10000" step="0.01" ng-keyup="$event.keyCode == 13 && record('wantlist')">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wantlistLink" class="col-sm-2 control-label">Lien</label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control input-sm" id="wantlistLink" placeholder="Lien" ng-model="lists.wantlist.entry.link">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-sm-offset-2 col-sm-10">
+                                            <button type="button" class="btn btn-sm btn-success btn-block" ng-click="record('wantlist')">Enregistrer</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div ng-class="classize()"> <!-- Achats -->
+                        <h3><img src="../assets/img/1470098433_number-three.png" alt="Three" width="20" height="20">&nbsp;Achats</h3>
+                        <table class="table table-hover table-condensed">
+                            <thead class="thead-default">
+                                <th ng-click="organize('bought', 'brand')">Marque</th>
+                                <th ng-click="organize('bought', 'model')">Modèle</th>
+                                <th ng-click="organize('bought', 'type')">Type</th>
+                                <th ng-click="organize('bought', 'price')">Prix</th>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="good in lists.bought.goods" ng-click="editGood('bought', $index)">
+                                    <td>{{ good.getBrand() }}</td>
+                                    <td>{{ good.getModel() }}</td>
+                                    <td>{{ good.getType() }}</td>
+                                    <td ng-style="stylize(good)">{{ good.getPrice() | money }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row" style="margin-bottom: 18px;">
+                            <div class="col-sm-8 text-center">
+                                <span class="h3">Total</span>
+                            </div>
+                            <div class="col-sm-4 text-center">
+                                <span class="h3">{{ lists.bought.getTotal() | money }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap libs CDN -->
+        <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js" integrity="sha384-THPy051/pYDQGanwU6poAc/hOdQxjnOEXzbT+OuUAFqNqFjL+4IGLBgCJC3ZOShY" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.2.0/js/tether.min.js" integrity="sha384-Plbmg8JY28KFelvJVai01l8WyZzrYWG825m+cZ0eDDS1f7d/js6ikvy1+X+guPIB" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>-->
+
+        <!-- Bootstrap libs Local -->
+        <script src="../assets/js/jquery-3.1.0.min.js" charset="utf-8"></script>
+        <script src="../assets/js/tether.min.js" charset="utf-8"></script>
+        <script src="../assets/js/bootstrap.min.js" charset="utf-8"></script>
+
+        <!-- AngularJS -->
+        <script src="../assets/js/angular.min.js" charset="utf-8"></script>
+        <script src="../assets/js/angular-animate.min.js" charset="utf-8"></script>
+        <script src="../assets/js/angular-cookies.min.js" charset="utf-8"></script>
+        <script src="../assets/js/ui-bootstrap-tpls-2.0.1.min.js" charset="utf-8"></script>
+
+        <!-- WanshList app -->
+        <script src="wanshlist.js" charset="utf-8"></script>
+    </body>
+</html>
