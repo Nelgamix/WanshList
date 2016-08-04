@@ -1,4 +1,4 @@
-function Good (brand = "", model = "", type = "", price = 0, priority = 0, link = "", creationDate = undefined, buyDate = "", rating = 0) {
+function Good (brand = "", model = "", type = "", price = 0, priority = 0, link = "", creationDate = undefined, buyDate = "", rating = 0, note = "") {
     if (!creationDate) { creationDate = new Date(); }
     if (typeof brand === 'object') {
         this.brand = brand.brand;
@@ -10,6 +10,7 @@ function Good (brand = "", model = "", type = "", price = 0, priority = 0, link 
         this.creationDate = brand.creationDate;
         this.buyDate = brand.buyDate;
         this.rating = brand.rating;
+        this.note = brand.note;
     } else {
         this.brand = brand;
         this.model = model;
@@ -20,6 +21,7 @@ function Good (brand = "", model = "", type = "", price = 0, priority = 0, link 
         this.creationDate = creationDate;
         this.buyDate = buyDate;
         this.rating = rating;
+        this.note = note;
     }
 }
 
@@ -33,6 +35,7 @@ Good.prototype.setLink = function (link) { this.link = link; };
 Good.prototype.setCreationDate = function (creationDate) { this.creationDate = creationDate; };
 Good.prototype.setBuyDate = function (buyDate) { this.buyDate = buyDate; };
 Good.prototype.setRating = function (rating) { this.rating = rating; };
+Good.prototype.setNote = function (note) { this.note = note; };
 
 // Getters
 Good.prototype.getBrand = function () { if (this.brand !== undefined && this.brand !== "") { return this.brand; } else { return "--"; } };
@@ -44,6 +47,7 @@ Good.prototype.getLink = function () { if (this.link !== undefined && this.link 
 Good.prototype.getCreationDate = function () { if (this.creationDate !== undefined && this.creationDate !== "") { this.verifyDate(); return this.creationDate.toLocaleString(); } else { return "--"; } };
 Good.prototype.getBuyDate = function () { if (this.buyDate !== undefined && this.buyDate !== "") { this.verifyDate(); return this.buyDate.toLocaleString(); } else { return "--"; } };
 Good.prototype.getRating = function () { if (this.rating !== undefined && this.rating !== "") { return this.rating; } else { return "--"; } };
+Good.prototype.getNote = function () { if (this.note !== undefined && this.note !== "") { return this.note; } else { return "--"; } };
 
 Good.prototype.verifyDate = function () {
     if (this.creationDate && !(this.creationDate instanceof Date)) { this.creationDate = new Date(this.creationDate); }
